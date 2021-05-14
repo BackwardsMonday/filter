@@ -1,5 +1,6 @@
 #include "helpers.h"
 #include <math.h>
+#include <stdio.h>
 
 // Convert image to grayscale
 void grayscale(int height, int width, RGBTRIPLE image[height][width])
@@ -44,195 +45,58 @@ void reflect(int height, int width, RGBTRIPLE image[height][width])
     }
     return;
 }
-
-RGBTRIPLE add2dRGB(int height, int width, RGBTRIPLE array[height][width])
+typedef struct
 {
-    RGBTRIPLE total;
-    total.rgbtBlue = 0;
-    total.rgbtGreen = 0;
-    total.rgbtRed = 0;
-    for(int i = 0; i < height; i++)
+    RGBTRIPLE rgbValue;
+    int integer;
+}rgbAndint;
+
+
+rgbAndint addSquare(int pixalsHight, int pixalsWidth, int height, int width, RGBTRIPLE image[height][width])
+{
+    rgbAndint newValue;
+    newValue.integer = 0;
+    newValue.rgbValue.rgbtBlue = 0;
+    newValue.rgbValue.rgbtGreen = 0;
+    newValue.rgbValue.rgbtRed = 0;
+
+    for (int i = -1; i < 2; i++)
     {
-        for(int j = 0; j < width; j++)
+        for(int j  = -1; j < 2; j++)
         {
-            total.rgbtBlue+= array[i][j].rgbtBlue;
-            total.rgbtGreen+= array[i][j].rgbtGreen;
-            total.rgbtRed+= array[i][j].rgbtRed;
+            if ((i == -1 && pixalsHight == 0) || (i == 1 && pixalsHight == height-1) || (j == -1 && pixalsWidth == 0) || (j == 1 && pixalsWidth == width-1))
+            {
+                continue;
+            }
+            newValue.integer+= 1;
+            newValue.rgbValue.rgbtBlue+= image[pixalsHight+i][pixalsWidth+j].rgbtBlue;
+            newValue.rgbValue.rgbtRed+= image[pixalsHight+i][pixalsWidth+j].rgbtRed;
+            newValue.rgbValue.rgbtGreen+= image[pixalsHight+i][pixalsWidth+j].rgbtGreen;
+
         }
     }
-    return total;
+    return newValue;
 }
-
-// Blur image
 void blur(int height, int width, RGBTRIPLE image[height][width])
 {
     RGBTRIPLE originalImage[height][width];
-    for(int i = 0; i < height; i++)
+    for (int i = 0; i < height; i++)
     {
-        for(int j = 0; j < width; j++)
+        for (int j = 0; j < width; j++)
         {
             originalImage[i][j] = image[i][j];
         }
     }
-
-    for(int i = 0; i < height; i++)
+    for (int i = 0; i < height; i++)
     {
-        for(int j = 0; j < width; j++)
+        for(int j  = 0; j < width; j++)
         {
-            int blanks = 0;
-            RGBTRIPLE blank;
-            blank.rgbtBlue = 0;
-            blank.rgbtGreen = 0;
-            blank.rgbtRed = 0;
+            rgbAndint newValue = addSquare(i, j, height, width, originalImage);
 
-            RGBTRIPLE square[3][3];
-            
-            if (i == 0)
-            {
-                if (j == 0)
-                {
-                    square[0][0] = blank;
-                    square[0][1] = blank;
-                    square[0][2] = blank;
-                    square[1][0] = blank;
-                    square[1][1] = originalImage[i][j];
-                    square[1][2] = originalImage[i][j+1];
-                    square[2][0] = blank;
-                    square[2][1] = originalImage[i-1][j];
-                    square[2][2] = originalImage[i-1][j+1];
-
-                    blanks = 5;
-                }
-                else if (j == width-1)
-                {
-                    square[0][0] = blank;
-                    square[0][1] = blank;
-                    square[0][2] = blank;
-                    square[1][0] = originalImage[i][j-1];
-                    square[1][1] = originalImage[i][j];
-                    square[1][2] = blank;
-                    square[2][0] = originalImage[i-1][j-1];
-                    square[2][1] = originalImage[i-1][j];
-                    square[2][2] = blank;
-
-                    blanks = 5;
-                }
-                else
-                {
-                    square[0][0] = blank;
-                    square[0][1] = blank;
-                    square[0][2] = blank;
-                    square[1][0] = originalImage[i][j-1];
-                    square[1][1] = originalImage[i][j];
-                    square[1][2] = originalImage[i][j+1];
-                    square[2][0] = originalImage[i-1][j-1];
-                    square[2][1] = originalImage[i-1][j];
-                    square[2][2] = originalImage[i-1][j+1];
-
-                    blanks = 3;
-                }
-            }
-
-            else if(i == height-1)
-            {
-                if (j == 0)
-                {
-                    square[0][0] = blank;
-                    square[0][1] = originalImage[i+1][j];
-                    square[0][2] = originalImage[i+1][j+1];
-                    square[1][0] = blank;
-                    square[1][1] = originalImage[i][j];
-                    square[1][2] = originalImage[i][j+1];
-                    square[2][0] = blank;
-                    square[2][1] = blank;
-                    square[2][2] = blank;
-
-                    blanks = 5;
-                }
-                else if (j == width-1)
-                {
-                    square[0][0] = originalImage[i+1][j-1];
-                    square[0][1] = originalImage[i+1][j];
-                    square[0][2] = blank;
-                    square[1][0] = originalImage[i][j-1];
-                    square[1][1] = originalImage[i][j];
-                    square[1][2] = blank;
-                    square[2][0] = blank;
-                    square[2][1] = blank;
-                    square[2][2] = blank;
-
-                    blanks = 5;
-                }
-                else
-                {
-                    square[0][0] = originalImage[i+1][j-1];
-                    square[0][1] = originalImage[i+1][j];
-                    square[0][2] = originalImage[i+1][j+1];
-                    square[1][0] = originalImage[i][j-1];
-                    square[1][1] = originalImage[i][j];
-                    square[1][2] = originalImage[i][j+1];
-                    square[2][0] = blank;
-                    square[2][1] = blank;
-                    square[2][2] = blank;
-
-                    blanks = 3;
-
-                }
-            }
-
-            else if (j == 0)
-            {
-                square[0][0] = blank;
-                square[0][1] = originalImage[i+1][j];
-                square[0][2] = originalImage[i+1][j+1];
-                square[1][0] = blank;
-                square[1][1] = originalImage[i][j];
-                square[1][2] = originalImage[i][j+1];
-                square[2][0] = blank;
-                square[2][1] = originalImage[i-1][j];
-                square[2][2] = originalImage[i-1][j+1];
-
-                blanks = 3;
-            }
-
-            else if (j == width)
-            {
-                square[0][0] = originalImage[i+1][j-1];
-                square[0][1] = originalImage[i+1][j];
-                square[0][2] = blank;
-                square[1][0] = originalImage[i][j-1];
-                square[1][1] = originalImage[i][j];
-                square[1][2] = blank;
-                square[2][0] = originalImage[i-1][j-1];
-                square[2][1] = originalImage[i-1][j];
-                square[2][2] = blank;
-
-                blanks = 3;
-            }
-
-            else
-            {
-                square[0][0] = originalImage[i+1][j-1];
-                square[0][1] = originalImage[i+1][j];
-                square[0][2] = originalImage[i+1][j+1];
-                square[1][0] = originalImage[i][j-1];
-                square[1][1] = originalImage[i][j];
-                square[1][2] = originalImage[i][j+1];
-                square[2][0] = originalImage[i-1][j-1];
-                square[2][1] = originalImage[i-1][j];
-                square[2][2] = originalImage[i-1][j+1];
-
-            }
-            
-
-            RGBTRIPLE newValue = add2dRGB(3, 3, square);
-
-            newValue.rgbtBlue = round(newValue.rgbtBlue/(9-blanks));
-            newValue.rgbtGreen = round(newValue.rgbtGreen/(9-blanks));
-            newValue.rgbtRed = round(newValue.rgbtRed/(9-blanks));
-
-            image[i][j] = newValue;
-
+            newValue.rgbValue.rgbtRed = newValue.rgbValue.rgbtRed/newValue.integer;
+            newValue.rgbValue.rgbtBlue = newValue.rgbValue.rgbtBlue/newValue.integer;
+            newValue.rgbValue.rgbtGreen = newValue.rgbValue.rgbtGreen/newValue.integer;
+            image[i][j] = newValue.rgbValue;
         }
     }
     return;
